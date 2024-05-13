@@ -1,4 +1,5 @@
 from src.forth.lexer import ForthLexer
+from src.forth.parser import ForthParser
 from src.lib.lexer.tstream import CharStream
 
 if __name__ == "__main__":
@@ -13,5 +14,8 @@ if __name__ == "__main__":
     stream = CharStream(text)
     lexer = ForthLexer(stream)
     tokens = lexer()
+
+    parser = ForthParser()
+    ast = parser.parse(tokens)
 
     print(tokens)

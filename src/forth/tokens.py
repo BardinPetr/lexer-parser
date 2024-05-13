@@ -18,8 +18,10 @@ class ForthTokenType(TokenType):
     WHILE_END = "until"
 
     MEM_STORE = "!"
+    MEM_STORE_INC = "+!"
     MEM_FETCH = "@"
     MEM_ALLOC = "allot"
+    MEM_CELLS = "cells"
 
     DEF_CONST = "constant"
     DEF_VAR = "variable"

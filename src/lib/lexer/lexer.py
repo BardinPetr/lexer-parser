@@ -1,4 +1,5 @@
-from typing import List, Type, Optional, Tuple
+from re import Pattern
+from typing import List, Type, Optional, Tuple, Dict
 
 from src.lib.lexer.tokens import Token, TokenType
 from src.lib.lexer.tstream import CharStream
@@ -72,3 +73,27 @@ class Lexer:
         Or prevent handling of that token by throwing an exception.
         """
         return Token(token_type, None)
+
+
+class LexerRe(Lexer):
+    """
+    Extended lexer with regex fallback support from TokenType Patterns
+    """
+
+    def __init__(self, stream: CharStream, tokens: Type[TokenType]):
+        super().__init__(stream, tokens)
+        self._fallbacks: Dict[TokenType, Pattern] = tokens.pattern_values()
+
+    def parse_fallback(self) -> Optional[Tuple[TokenType, str]]:
+        res = ""
+        while not self._stream.eof() and not self.is_fallback_separator(self._stream.peek()):
+            res += self._stream.next()
+
+        for tok_type, test in self._fallbacks.items():
+            if test.fullmatch(res):
+                return tok_type, res
+
+        return None
+
+    def is_fallback_separator(self, char: str) -> bool:
+        return self.is_separator(char)

@@ -1,16 +1,12 @@
-from re import Pattern
-from typing import Optional, Tuple, Dict
-
 from src.forth.tokens import ForthTokenType
-from src.lib.lexer.lexer import Lexer
+from src.lib.lexer.lexer import LexerRe
 from src.lib.lexer.tokens import TokenType, Token
 from src.lib.lexer.tstream import CharStream
 
 
-class ForthLexer(Lexer):
+class ForthLexer(LexerRe):
     def __init__(self, stream: CharStream):
         super().__init__(stream, ForthTokenType)
-        self._fallbacks: Dict[TokenType, Pattern] = ForthTokenType.pattern_values()
 
     def is_separator(self, char: str) -> bool:
         return char.isspace()
@@ -21,17 +17,6 @@ class ForthLexer(Lexer):
         """
         token_after = self._stream.peek(len(matched))
         return token_after is None or self.is_separator(token_after)
-
-    def parse_fallback(self) -> Optional[Tuple[TokenType, str]]:
-        res = ""
-        while not self._stream.eof() and not self.is_separator(self._stream.peek()):
-            res += self._stream.next()
-
-        for tok_type, test in self._fallbacks.items():
-            if test.fullmatch(res):
-                return tok_type, res
-
-        return None
 
     def handle_token_type(self, token_type: TokenType, matched: str):
         match token_type:
