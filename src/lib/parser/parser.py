@@ -1,25 +1,41 @@
+import inspect
 from dataclasses import dataclass, field
-from typing import List, Callable, Dict, Any
+from enum import Enum
+from typing import List, Callable, Any
 
 from src.lib.lexer.tokens import Token, TokenType
 
 Tokens = List[Token]
 
 
+class NodeType(Enum):
+    pass
+
+
+@dataclass
+class Node:
+    type: NodeType
+    value: Any
+
+    def __str__(self):
+        return f"{self.type.name}({self.value})"
+
+    def __repr__(self):
+        return self.__str__()
+
 @dataclass
 class ParseResult:
     success: bool
-    result: Tokens = field(default_factory=list)
+    result: Any = field(default_factory=list)
     rest: Tokens = field(default_factory=list)
-    captures: Dict[str, Any] = field(default_factory=dict)
 
     @staticmethod
     def fail() -> 'ParseResult':
         return ParseResult(False)
 
     @staticmethod
-    def ok(*args, **kwargs) -> 'ParseResult':
-        return ParseResult(True, *args, **kwargs)
+    def ok(result: Any, rest: Tokens) -> 'ParseResult':
+        return ParseResult(True, result, rest)
 
 
 fail = ParseResult.fail
@@ -43,9 +59,8 @@ def andComb(*combs: Combinator) -> Combinator:
         for comb in combs:
             if not (res := comb(tokens)).success:
                 return fail()
-            out.extend(res.result)
+            out.append(res.result)
             tokens = res.rest
-        print("AND", out)
         return success(out, tokens)
 
     return _call
@@ -57,8 +72,30 @@ def countComb(min_count: int, comb: Combinator) -> Combinator:
         cnt = 0
         while (res := comb(tokens)).success:
             tokens = res.rest
-            out.extend(res.result)
+            out.append(res.result)
             cnt += 1
+
+        if cnt >= min_count:
+            return success(out, tokens)
+        return fail()
+
+    return _call
+
+
+def countCombSep(min_count: int, mainComb: Combinator, separatorComb: Combinator) -> Combinator:
+    def _call(tokens: Tokens) -> ParseResult:
+        out = []
+        cnt = 0
+
+        while (res := mainComb(tokens)).success:
+            tokens = res.rest
+            out.append(res.result)
+            cnt += 1
+
+            if (res := separatorComb(tokens)).success:
+                tokens = res.rest
+            else:
+                break
 
         if cnt >= min_count:
             return success(out, tokens)
@@ -70,7 +107,16 @@ def countComb(min_count: int, comb: Combinator) -> Combinator:
 def tokenComb(type_id: TokenType) -> Combinator:
     def _call(tokens: Tokens) -> ParseResult:
         if tokens and tokens[0].type_id == type_id:
-            return success([tokens[0]], tokens[1:])
+            return success(tokens[0], tokens[1:])
+        return fail()
+
+    return _call
+
+
+def nodeComb(node_type: NodeType, comb: Combinator) -> Combinator:
+    def _call(tokens: Tokens) -> ParseResult:
+        if (res := comb(tokens)).success:
+            return success(Node(node_type, res.result), res.rest)
         return fail()
 
     return _call
