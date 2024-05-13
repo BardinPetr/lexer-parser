@@ -1,5 +1,5 @@
 from src.forth.lexer import ForthLexer
-from src.lib.tstream import CharStream
+from src.lib.lexer.tstream import CharStream
 
 if __name__ == "__main__":
     text = """

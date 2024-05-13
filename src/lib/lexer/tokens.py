@@ -1,6 +1,6 @@
 from enum import Enum
 from re import Pattern
-from typing import Any
+from typing import Any, Dict
 
 from src.lib.automata.automata import StringAutomata
 
@@ -16,7 +16,7 @@ class TokenType(Enum):
         return {k: v for k, v in cls.values().items() if isinstance(v, str)}
 
     @classmethod
-    def pattern_values(cls):
+    def pattern_values(cls) -> Dict['TokenType', Pattern]:
         return {k: v for k, v in cls.values().items() if isinstance(v, Pattern)}
 
     @classmethod

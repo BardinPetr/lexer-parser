@@ -1,6 +1,6 @@
 import re
 
-from src.lib.tokens import TokenType
+from src.lib.lexer.tokens import TokenType
 
 
 class ForthTokenType(TokenType):
@@ -50,4 +50,4 @@ class ForthTokenType(TokenType):
     DDASH = "--"
 
     NUMBER = re.compile(r"\d+")
-    WORD = re.compile(r".*")
+    WORD = re.compile(r"[\w_\-?]+")

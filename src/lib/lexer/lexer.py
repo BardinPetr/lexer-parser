@@ -1,7 +1,7 @@
-from typing import List, Type, Optional
+from typing import List, Type, Optional, Tuple
 
-from src.lib.tokens import Token, TokenType
-from src.lib.tstream import CharStream
+from src.lib.lexer.tokens import Token, TokenType
+from src.lib.lexer.tstream import CharStream
 
 
 class Lexer:
@@ -44,18 +44,17 @@ class Lexer:
             if self.validate_token(token_type, matched):
                 self._stream.advance(matched_len)
                 return self.handle_token_type(token_type, matched)
-            # else:
-            # self.error(stream, f"token {token_type} considered invalid with text `{matched}`")
 
         token = self.parse_fallback()
         if token is not None:
-            return token
+            return self.handle_token_type(*token)
 
         self.error("not found")
 
-    def parse_fallback(self) -> Optional[Token]:
+    def parse_fallback(self) -> Optional[Tuple[TokenType, str]]:
         """
-        Try to find token if trie search failed
+        Try to find token if trie search failed by directly checking stream
+        :returns None if not found, else token type and matched string
         """
         return None
 

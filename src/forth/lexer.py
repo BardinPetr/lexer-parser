@@ -1,23 +1,19 @@
-import string
-from typing import Optional
+from re import Pattern
+from typing import Optional, Tuple, Dict
 
 from src.forth.tokens import ForthTokenType
-from src.lib.lexer import Lexer
-from src.lib.tokens import TokenType, Token
-from src.lib.tstream import CharStream
+from src.lib.lexer.lexer import Lexer
+from src.lib.lexer.tokens import TokenType, Token
+from src.lib.lexer.tstream import CharStream
 
 
 class ForthLexer(Lexer):
-    WORD_SYMBOLS = string.digits + string.ascii_letters + "?-_"
-
     def __init__(self, stream: CharStream):
         super().__init__(stream, ForthTokenType)
+        self._fallbacks: Dict[TokenType, Pattern] = ForthTokenType.pattern_values()
 
     def is_separator(self, char: str) -> bool:
         return char.isspace()
-
-    def is_identifier(self, text: str) -> bool:
-        return all([i in self.WORD_SYMBOLS for i in text])
 
     def validate_token(self, token_type: TokenType, matched: str) -> bool:
         """
@@ -26,15 +22,14 @@ class ForthLexer(Lexer):
         token_after = self._stream.peek(len(matched))
         return token_after is None or self.is_separator(token_after)
 
-    def parse_fallback(self) -> Optional[Token]:
+    def parse_fallback(self) -> Optional[Tuple[TokenType, str]]:
         res = ""
         while not self._stream.eof() and not self.is_separator(self._stream.peek()):
             res += self._stream.next()
 
-        if res.isdigit():
-            return Token(ForthTokenType.NUMBER, int(res))
-        if self.is_identifier(res):
-            return Token(ForthTokenType.WORD, res)
+        for tok_type, test in self._fallbacks.items():
+            if test.fullmatch(res):
+                return tok_type, res
 
         return None
 
@@ -61,4 +56,3 @@ class ForthLexer(Lexer):
             self.error("Not matched string")
 
         return Token(ForthTokenType.IO_OUT_STR, text)
-
