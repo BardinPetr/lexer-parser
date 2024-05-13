@@ -1,9 +1,8 @@
 from enum import Enum
-from enum import Enum
 from re import Pattern
 from typing import Any
 
-from src.lib.automata import StringAutomata
+from src.lib.automata.automata import StringAutomata
 
 
 class TokenType(Enum):
@@ -35,7 +34,7 @@ class Token:
         self.value = value
 
     def __str__(self):
-        return super().__str__()
+        return self.type_id.name + ("" if self.value is None else f" as {self.value.__repr__()}")
 
     def __repr__(self):
-        return f"T<{self.type_id}>"
+        return f"<{str(self)}>"

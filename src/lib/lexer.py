@@ -1,41 +1,75 @@
-from typing import List, Generator, Type
+from typing import List, Type, Optional
 
-from src.lib.token import Token, TokenType
+from src.lib.tokens import Token, TokenType
 from src.lib.tstream import CharStream
 
 
 class Lexer:
 
-    def __init__(self, tokens: Type[TokenType]):
+    def __init__(self, stream: CharStream, tokens: Type[TokenType]):
         self._char_automata = tokens.automata()
+        self._stream = stream
 
-    def __call__(self, stream: CharStream) -> List[Token]:
+    def __call__(self) -> List[Token]:
         res = []
-        while not stream.eof():
-            stream.skip(self.is_separator)
-            if stream.eof():
+        while not self._stream.eof():
+            self.skip()
+            if self._stream.eof():
                 break
-            gen = self.parse_tokens(stream)
-            res.extend(list(gen))
+            res.append(self.__parse_token())
         return res
 
     def is_separator(self, char: str) -> bool:
         return False
 
-    def parse_tokens(self, stream: CharStream) -> Generator[Token, None, None]:
-        search = self._char_automata.search(stream[:])
-        if search is None:
-            raise ValueError(f"Failed to tokenize starting at: {stream[:][:10]}...")
+    def skip(self):
+        """
+        Skip symbols matching 'is_separator()'
+        """
+        self._stream.skip(self.is_separator)
 
-        matched, token_type = search
+    def error(self, err_text: str):
+        """
+        Raise error with specified text and append info on source text
+        """
+        line_text = self._stream[:][:10].replace('\n', ' ')
+        raise ValueError(f"Failed to tokenize starting at: `{line_text}...`:\n\terror: ({err_text})")
 
-        stream.advance(len(matched))
-        yield self.handle_token_type(stream, token_type, matched)
+    def __parse_token(self) -> Token:
+        search = self._char_automata.search(self._stream[:])
+        if search is not None:
+            matched, token_type = search
+            matched_len = len(matched)
 
-    def handle_token_type(self, stream: CharStream, token_type: TokenType, matched: str) -> Token:
+            if self.validate_token(token_type, matched):
+                self._stream.advance(matched_len)
+                return self.handle_token_type(token_type, matched)
+            # else:
+            # self.error(stream, f"token {token_type} considered invalid with text `{matched}`")
+
+        token = self.parse_fallback()
+        if token is not None:
+            return token
+
+        self.error("not found")
+
+    def parse_fallback(self) -> Optional[Token]:
+        """
+        Try to find token if trie search failed
+        """
+        return None
+
+    def validate_token(self, token_type: TokenType, matched: str) -> bool:
+        """
+        Check if found token is valid (fully matched)
+        :return:
+        """
+        return True
+
+    def handle_token_type(self, token_type: TokenType, matched: str) -> Token:
         """
         Should create Token object for given type and matched string.
         It may consume more symbols from 'stream' to fill Token (but not before the end of 'matched').
         Or prevent handling of that token by throwing an exception.
         """
-        return Token(token_type, token_type.name)
+        return Token(token_type, None)

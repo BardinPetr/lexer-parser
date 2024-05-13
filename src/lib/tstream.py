@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 
 
 class CharStream:
@@ -6,8 +6,9 @@ class CharStream:
         self._text = text
         self._pos = 0
 
-    def peek(self) -> str:
-        return self._text[self._pos]
+    def peek(self, skip: int = 0) -> Optional[str]:
+        pos = self._pos + skip
+        return self._text[pos] if pos < len(self._text) else None
 
     def advance(self, cnt: int = 1):
         self._pos += cnt
