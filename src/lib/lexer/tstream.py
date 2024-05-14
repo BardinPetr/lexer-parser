@@ -14,6 +14,8 @@ class CharStream:
         self._pos += cnt
 
     def next(self) -> str:
+        if self.eof():
+            return ""
         res = self._text[self._pos]
         self.advance()
         return res

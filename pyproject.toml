@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cpu1-forth"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = ["BardinPetr <bardin.petr@gmail.com>"]
 readme = "README.md"

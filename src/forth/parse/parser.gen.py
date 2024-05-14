@@ -1,6 +1,7 @@
+# Generated from BNF
 from src.lib.parser.utils import CombinatorRef
 from src.lib.parser.combinator import *
-from src.forth.tokens import ForthTokenType
+from src.forth.lexer.tokens import ForthTokenType
 
 func_body = CombinatorRef()
 
@@ -74,17 +75,6 @@ command = labelComb(
     node_name="command"
 )
 
-def_arr = labelComb(
-    andComb(
-        tokenComb(ForthTokenType.DEF_VAR),
-        tokenComb(ForthTokenType.WORD),
-        tokenComb(ForthTokenType.NUMBER),
-        tokenComb(ForthTokenType.MEM_CELLS),
-        tokenComb(ForthTokenType.MEM_ALLOC)
-    ),
-    node_name="def_arr"
-)
-
 def_var = labelComb(
     andComb(
         tokenComb(ForthTokenType.DEF_VAR),
@@ -102,11 +92,21 @@ def_const = labelComb(
     node_name="def_const"
 )
 
+def_arr = labelComb(
+    andComb(
+        def_var,
+        tokenComb(ForthTokenType.NUMBER),
+        tokenComb(ForthTokenType.MEM_CELLS),
+        tokenComb(ForthTokenType.MEM_ALLOC)
+    ),
+    node_name="def_arr"
+)
+
 definition = labelComb(
     orComb(
         def_const,
-        def_var,
-        def_arr
+        def_arr,
+        def_var
         , create_node=True
     ),
     node_name="definition"

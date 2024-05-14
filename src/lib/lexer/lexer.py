@@ -9,7 +9,7 @@ class Lexer:
 
     def __init__(self, tokens: Type[TokenType]):
         self._char_automata = tokens.automata()
-        self._stream = None
+        self._stream: Optional[CharStream] = None
 
     def __call__(self, stream: CharStream) -> List[Token]:
         self._stream = stream
@@ -18,7 +18,9 @@ class Lexer:
             self.skip()
             if self._stream.eof():
                 break
-            res.append(self.__parse_token())
+            token = self.__parse_token()
+            if token:
+                res.append(token)
         return res
 
     def is_separator(self, char: str) -> bool:

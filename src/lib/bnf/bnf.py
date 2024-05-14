@@ -136,27 +136,10 @@ class BNF2PythonTransformer(Transformer):
             for i in self._use_as_ref
         ])
         return f"""
+            # Generated from BNF
             from src.lib.parser.utils import CombinatorRef
             from src.lib.parser.combinator import *
             from {self._tt_ns} import {self._tt_class}\n
             {decls}\n
             {body}
         """
-
-
-if __name__ == "__main__":
-    bnf_path = "/home/petr/Desktop/cpu1_forth/src/forth/grammar.bnf"
-    python_path = "../../forth/parser.py"
-    token_namespace = "src.forth.tokens.ForthTokenType"
-    combinators_as_refs = ["func_body"]
-
-    text = FileCharStream(bnf_path)
-    tokens = BNFLexer()(text)
-    tree = BNFParser()(tokens).result
-    code = BNF2PythonTransformer(token_namespace, combinators_as_refs)(tree)
-
-    # pprint(tree)
-    # print(tree.print())
-
-    with open(python_path, "w") as f:
-        f.write(code)

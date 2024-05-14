@@ -14,7 +14,7 @@ class PNodeType:
 
 @dataclass
 class PNode:
-    type: PNodeType
+    type: PNodeType | str
     values: List[Any]
 
     def __str__(self):

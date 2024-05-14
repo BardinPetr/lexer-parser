@@ -1,4 +1,5 @@
-from typing import Union
+from functools import reduce
+from typing import Union, Tuple
 
 from src.lib.lexer.tokens import TokenType
 from src.lib.parser.models import *
@@ -98,14 +99,44 @@ def labelComb(comb: Combinator, node_name: Union[PNodeType | str]) -> Combinator
     return _call
 
 
-def mapComb(func: Callable[[PNode], PNode], comb: Combinator) -> Combinator:
+def mapComb(func: Callable[[str, List], Tuple[str, List]], comb: Combinator) -> Combinator:
     """
-    Run converter function on PNode returned by calling combinator
+    Run converter function on PNode returned by calling combinator.
+    :param func takes node and return name and children of new node
     """
 
     def _call(tokens: Tokens) -> ParseResult:
         if (res := comb(tokens)).success:
-            return ParseResult(True, func(res.result), res.rest)
+            node = PNode(*func(res.result.type, res.result.values))
+            return ParseResult(True, node, res.rest)
         return fail()
 
     return _call
+
+
+def takeComb(select: slice | List[int], comb: Combinator, node_name=None) -> Combinator:
+    """
+    Returns unwrapped children of children, with slice over own children
+    :param select slice or specified indexes
+    """
+
+    def _apply(n_name, n_vals):
+        nodes = n_vals[select] \
+            if isinstance(select, slice) \
+            else [n_vals[idx] for idx in select]
+
+        return (node_name or n_name), [i.values for i in nodes]
+
+    return mapComb(_apply, comb)
+
+
+def flattenComb(select: Optional[slice | List[int]], comb: Combinator, node_name=None) -> Combinator:
+    """
+    Join all children results into single result array
+    :param select passed to takeComb
+    """
+
+    def _apply(n_name, n_vals):
+        return (node_name or n_name), reduce(lambda acc, i: acc + i, n_vals, [])
+
+    return mapComb(_apply, takeComb(select, comb))

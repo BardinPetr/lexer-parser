@@ -8,10 +8,10 @@ for_expr ::= FOR_BEGIN func_body FOR_END
 while_expr ::= WHILE_BEGIN func_body WHILE_END
 
 
-definition ::= def_const | def_var | def_arr
+definition ::= def_const | def_arr | def_var
+def_arr ::= def_var NUMBER MEM_CELLS MEM_ALLOC
 def_const ::= NUMBER DEF_CONST WORD
 def_var ::= DEF_VAR WORD
-def_arr ::= DEF_VAR WORD NUMBER MEM_CELLS MEM_ALLOC
 
 
 command ::= cmd_call | cmd_compare | cmd_calc | cmd_io | cmd_mem | cmd_push

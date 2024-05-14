@@ -50,6 +50,7 @@ class ForthTokenType(TokenType):
     PAREN_R = ")"
 
     DDASH = "--"
+    COMMENT = "\\"
 
     NUMBER = re.compile(r"\d+")
     WORD = re.compile(r"[\w_\-?]+")

@@ -1,4 +1,4 @@
-from src.forth.tokens import ForthTokenType
+from src.forth.lexer.tokens import ForthTokenType
 from src.lib.lexer.lexer import LexerRe
 from src.lib.lexer.tokens import TokenType, Token
 
@@ -25,6 +25,10 @@ class ForthLexer(LexerRe):
                 return Token(token_type, matched)
             case ForthTokenType.IO_OUT_STR:
                 return self.__match_string()
+            case ForthTokenType.PAREN_L:
+                return self.__discard_parenthesis()
+            case ForthTokenType.COMMENT:
+                return self.__discard_comment()
 
         return super().handle_token_type(token_type, matched)
 
@@ -40,3 +44,15 @@ class ForthLexer(LexerRe):
             self.error("Not matched string")
 
         return Token(ForthTokenType.IO_OUT_STR, text)
+
+    def __discard_parenthesis(self):
+        self._stream.skip(lambda char: char != ")")
+        self._stream.next()
+        if self._stream.eof():
+            self.error("Not matched parenthesis comment")
+        return None
+
+    def __discard_comment(self):
+        self._stream.skip(lambda char: char != "\n")
+        self._stream.next()
+        return None
