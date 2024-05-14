@@ -1,19 +1,21 @@
-program ::= def | command | program
+program ::= program | definition | function | command
 
-def ::= def_const | def_var | def_arr | def_func
+function ::= FUNC_BEGIN WORD func_body FUNC_END
+func_body ::= func_body | command | if_expr | for_expr | while_expr
+
+if_expr ::= COND_IF func_body COND_THEN | COND_IF func_body COND_ELSE func_body COND_THEN
+for_expr ::= FOR_BEGIN func_body FOR_END
+while_expr ::= WHILE_BEGIN func_body WHILE_END
+
+
+definition ::= def_const | def_var | def_arr
 def_const ::= NUMBER DEF_CONST WORD
 def_var ::= DEF_VAR WORD
 def_arr ::= DEF_VAR WORD NUMBER MEM_CELLS MEM_ALLOC
 
-def_func ::= FUNC_BEGIN WORD body FUNC_END
-body ::= command | if_expr | for_expr | while_expr | body
 
-if_expr ::= COND_IF body COND_THEN | COND_IF body COND_ELSE body COND_THEN
-for_expr ::= FOR_BEGIN body FOR_END
-while_expr ::= WHILE_BEGIN body WHILE_END
-
-command ::= WORD | cmd_compare | cmd_calc | cmd_io | cmd_mem
-
+command ::= cmd_call | cmd_compare | cmd_calc | cmd_io | cmd_mem
+cmd_call ::= WORD
 cmd_mem ::= MEM_FETCH | MEM_STORE | MEM_STORE_INC
 cmd_compare ::= CMP_EQ | CMP_LT | CMP_GT
 cmd_calc ::= MATH_ADD | MATH_SUB | MATH_DIV | MATH_MUL | MATH_MOD | LOG_INV | LOG_AND | LOG_OR

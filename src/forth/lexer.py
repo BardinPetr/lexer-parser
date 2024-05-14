@@ -5,8 +5,8 @@ from src.lib.lexer.tstream import CharStream
 
 
 class ForthLexer(LexerRe):
-    def __init__(self, stream: CharStream):
-        super().__init__(stream, ForthTokenType)
+    def __init__(self):
+        super().__init__(ForthTokenType)
 
     def is_separator(self, char: str) -> bool:
         return char.isspace()

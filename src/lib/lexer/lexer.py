@@ -7,11 +7,12 @@ from src.lib.lexer.tstream import CharStream
 
 class Lexer:
 
-    def __init__(self, stream: CharStream, tokens: Type[TokenType]):
+    def __init__(self, tokens: Type[TokenType]):
         self._char_automata = tokens.automata()
-        self._stream = stream
+        self._stream = None
 
-    def __call__(self) -> List[Token]:
+    def __call__(self, stream: CharStream) -> List[Token]:
+        self._stream = stream
         res = []
         while not self._stream.eof():
             self.skip()
@@ -80,8 +81,8 @@ class LexerRe(Lexer):
     Extended lexer with regex fallback support from TokenType Patterns
     """
 
-    def __init__(self, stream: CharStream, tokens: Type[TokenType]):
-        super().__init__(stream, tokens)
+    def __init__(self, tokens: Type[TokenType]):
+        super().__init__(tokens)
         self._fallbacks: Dict[TokenType, Pattern] = tokens.pattern_values()
 
     def parse_fallback(self) -> Optional[Tuple[TokenType, str]]:
