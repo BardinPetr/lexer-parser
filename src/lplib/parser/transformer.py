@@ -38,8 +38,14 @@ class Transformer:
             else node
 
     def __call__(self, tree):
+        """
+        Process depth-first all nodes and their children.
+        Ignore children whose processing result was None
+        """
         if isinstance(tree, List | Tuple):
-            return [self(i) for i in tree]
+            return [output
+                    for i in tree
+                    if (output := self(i)) is not None]
         if isinstance(tree, PNode):
             node = self.__transform(tree, before=True)
             node = PNode(node.type, self(node.values))
