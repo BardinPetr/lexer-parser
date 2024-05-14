@@ -1,9 +1,10 @@
 import re
-from pprint import pprint
+from enum import auto
 
 from src.lib.lexer.lexer import LexerRe
 from src.lib.lexer.tstream import CharStream, FileCharStream
 from src.lib.parser.parser import *
+from src.lib.parser.transformer import Transformer
 
 
 class BNFTokenType(TokenType):
@@ -15,8 +16,8 @@ class BNFTokenType(TokenType):
 
 
 class BNFLexer(LexerRe):
-    def __init__(self, stream: CharStream):
-        super().__init__(stream, BNFTokenType)
+    def __init__(self):
+        super().__init__(BNFTokenType)
 
     def is_separator(self, char: str) -> bool:
         return char == " "
@@ -32,11 +33,11 @@ class BNFLexer(LexerRe):
                 return Token(token_type, matched)
         return Token(token_type, None)
 
-    def __call__(self) -> List[Token]:
+    def __call__(self, stream: CharStream) -> List[Token]:
         last_type = None
         res = []
         # remove sequential EOFs
-        for i in super().__call__():
+        for i in super().__call__(stream):
             if i.type_id == BNFTokenType.EOL and \
                     (i.type_id == last_type or last_type is None):
                 continue
@@ -45,61 +46,28 @@ class BNFLexer(LexerRe):
         return res
 
 
-class BNFNodeType(NodeType):
-    REF_NODE = 0
-    OR_NODE = 1
-    AND_NODE = 2
-    DEF_NODE = 3
+class BNFNodeType(PNodeType):
+    ROOT = -1
+    REF_PARSER = auto()
+    REF_LEXER = auto()
+    OR_NODE = auto()
+    AND_NODE = auto()
+    DEF_NODE = auto()
+    DEF_OR_NODE = auto()
 
 
-# class BNFParser:
-#     bnfReferenceComb = nodeComb(BNFNodeType.REF_NODE, orComb(
-#         tokenComb(BNFTokenType.LEXER_WORD),
-#         tokenComb(BNFTokenType.PARSER_WORD)
-#     ))
-#     bnfAndComb = countComb(1, bnfReferenceComb)
-#     bnfOrComb = countCombSep(
-#         1,
-#         mainComb=bnfAndComb,
-#         separatorComb=tokenComb(BNFTokenType.OR),
-#     )
-#     bnfDef = andComb(
-#         tokenComb(BNFTokenType.PARSER_WORD),
-#         tokenComb(BNFTokenType.EQ),
-#         bnfOrComb,
-#         tokenComb(BNFTokenType.EOL)
-#     )
-#     bnfRoot = countComb(1, bnfDef)
+def BNFParser():
+    bnfParserWordComb = nodeComb(
+        BNFNodeType.REF_PARSER,
+        tokenComb(BNFTokenType.PARSER_WORD)
+    )
+    bnfLexerWordComb = nodeComb(
+        BNFNodeType.REF_LEXER,
+        tokenComb(BNFTokenType.LEXER_WORD)
+    )
 
-
-#     def __init__(self):
-#         # BNFParser.bnfRoot([])
-#         print(inspect.getmembers(self.__class__))
-
-# def __new__(cls, *args, **kwargs):
-#     cls.root = BNFParser.bnfRoot
-#     return super().__new__(cls)
-
-# def parse(self, tokens: List[Token]):
-#     return super().root(tokens)
-
-
-if __name__ == "__main__":
-    text = FileCharStream("/home/petr/Desktop/cpu1_forth/src/forth/grammar.bnf")
-    # text = CharStream("""
-    # if_expr ::= COND_IF body COND_THEN | COND_IF body COND_ELSE body COND_THEN
-    # """)
-    tokens = BNFLexer(text)()
-    print(tokens)
-
-    # p = BNFParser() #.parse(tokens)
-
-    bnfReferenceComb = nodeComb(
-        BNFNodeType.REF_NODE,
-        orComb(
-            tokenComb(BNFTokenType.LEXER_WORD),
-            tokenComb(BNFTokenType.PARSER_WORD)
-        )
+    bnfReferenceComb = orComb(
+        bnfParserWordComb, bnfLexerWordComb
     )
 
     bnfAndComb = nodeComb(
@@ -119,13 +87,83 @@ if __name__ == "__main__":
     bnfDef = nodeComb(
         BNFNodeType.DEF_NODE,
         andComb(
-            tokenComb(BNFTokenType.PARSER_WORD),
+            bnfParserWordComb,
             tokenComb(BNFTokenType.EQ),
             bnfOrComb,
             tokenComb(BNFTokenType.EOL)
         )
     )
 
-    bnfRoot = countComb(1, bnfDef)
+    bnfRoot = nodeComb(
+        BNFNodeType.ROOT,
+        countComb(1, bnfDef)
+    )
+    return bnfRoot
 
-    pprint(bnfRoot(tokens).result)
+
+class BNF2PythonTransformer(Transformer):
+
+    def __init__(self, namespace):
+        super().__init__()
+        self._ns = namespace
+
+    def REF_PARSER(self, i: Token):
+        return i.value
+
+    def REF_LEXER(self, i: Token):
+        ref = f"{self._ns}TokenType.{i.value}"
+        return f"tokenComb({ref})"
+
+    def AND_NODE(self, *andNodes):
+        if len(andNodes) == 1:
+            return andNodes[0]
+        nodes = ',\n'.join(andNodes)
+        return f"andComb(\n{nodes}\n)"
+
+    def before_DEF_NODE(self, node: PNode) -> PNode:
+        # replace root OR_NODE node with DEF_OR_NODE
+        # and push name of definition to it
+        # to control recursion on level of DEF_OR_NODE
+        name, _, body, _ = node.values
+        own_name = name.values[0].value
+        body.type = BNFNodeType.DEF_OR_NODE
+        body.values = (own_name, body.values)
+        return PNode(node.type, [name, body])
+
+    def OR_NODE(self, *orNodes):
+        if len(orNodes) == 1:
+            return orNodes[0]
+        nodes = ',\n'.join(orNodes)
+        return f"orComb(\n{nodes}\n)"
+
+    def DEF_OR_NODE(self, parent, orNodes):
+        # check if we have recursion in BNF form
+        # (supports only form of "name = <...> | name")
+        if parent not in orNodes:
+            return self.OR_NODE(*orNodes)
+        orNodes.remove(parent)
+        return f"countComb(\n1, \n{self.OR_NODE(*orNodes)}\n)"
+
+    def DEF_NODE(self, name, body):
+        return f"{name} = {body}"
+
+    def ROOT(self, *lines):
+        text = '\n'.join(lines[::-1])
+        return f"""
+            from src.lib.parser.parser import *
+            {text}
+        """
+
+
+if __name__ == "__main__":
+    bnf_path = "/home/petr/Desktop/cpu1_forth/src/forth/grammar.bnf"
+    python_path = "../../forth/parser.py"
+    namespace = "Forth"
+
+    text = FileCharStream(bnf_path)
+    tokens = BNFLexer()(text)
+    tree = BNFParser()(tokens).result
+    tree = BNF2PythonTransformer(namespace)(tree)
+
+    with open(python_path, "w") as f:
+        f.write(tree)
