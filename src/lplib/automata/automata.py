@@ -1,6 +1,6 @@
 from typing import Dict, Generic, TypeVar, Optional, Tuple, List, Iterable
 
-from src.lib.automata.state import AutomataStateId, AutomataState
+from src.lplib.automata.state import AutomataStateId, AutomataState
 
 ST = TypeVar("ST")
 TR = TypeVar("TR")

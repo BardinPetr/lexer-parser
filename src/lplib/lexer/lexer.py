@@ -1,8 +1,8 @@
 from re import Pattern
 from typing import List, Type, Optional, Tuple, Dict
 
-from src.lib.lexer.tokens import Token, TokenType
-from src.lib.lexer.tstream import CharStream
+from src.lplib.lexer.tokens import Token, TokenType
+from src.lplib.lexer.tstream import CharStream
 
 
 class Lexer:

@@ -1,6 +1,6 @@
 from src.forth.lexer.tokens import ForthTokenType
-from src.lib.lexer.lexer import LexerRe
-from src.lib.lexer.tokens import TokenType, Token
+from src.lplib.lexer.lexer import LexerRe
+from src.lplib.lexer.tokens import TokenType, Token
 
 
 class ForthLexer(LexerRe):

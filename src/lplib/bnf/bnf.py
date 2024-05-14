@@ -1,9 +1,9 @@
 import re
 
-from src.lib.lexer.lexer import LexerRe
-from src.lib.lexer.tstream import CharStream
-from src.lib.parser.combinator import *
-from src.lib.parser.transformer import Transformer
+from src.lplib.lexer.lexer import LexerRe
+from src.lplib.lexer.tstream import CharStream
+from src.lplib.parser.combinator import *
+from src.lplib.parser.transformer import Transformer
 
 
 class BNFTokenType(TokenType):
@@ -136,8 +136,8 @@ class BNF2PythonTransformer(Transformer):
         ])
         return f"""
             # Generated from BNF
-            from src.lib.parser.utils import CombinatorRef
-            from src.lib.parser.combinator import *
+            from src.lplib.parser.utils import CombinatorRef
+            from src.lplib.parser.combinator import *
             from {self._tt_ns} import {self._tt_class}\n
             {decls}\n
             {body}

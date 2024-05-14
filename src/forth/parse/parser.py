@@ -1,6 +1,6 @@
 from src.forth.lexer.tokens import ForthTokenType
-from src.lib.parser.combinator import *
-from src.lib.parser.utils import CombinatorRef
+from src.lplib.parser.combinator import *
+from src.lplib.parser.utils import CombinatorRef
 
 func_body = CombinatorRef()
 

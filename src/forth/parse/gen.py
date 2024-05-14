@@ -1,6 +1,6 @@
 # Tool for generating basic parser from BNF description
 
-from src.lib.bnf.bnf import compile_bnf2py
+from src.lplib.bnf.bnf import compile_bnf2py
 
 if __name__ == "__main__":
     bnf_path = "../grammar.bnf"
