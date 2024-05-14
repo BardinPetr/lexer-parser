@@ -1,6 +1,7 @@
 from forth.lexer.tokens import ForthTokenType
 from lplib.parser.combinator import *
 from lplib.parser.utils import CombinatorRef
+from forth.parse.nodes import ForthPNodeType as T
 
 func_body = CombinatorRef()
 
@@ -23,7 +24,7 @@ def commandComb() -> Combinator:
             tokenComb(ForthTokenType.IO_OUT_CHAR),
             tokenComb(ForthTokenType.IO_OUT_CR),
         ),
-        node_name="cmd_io"
+        node_name=T.cmd_io
     )
 
     cmd_calc = labelComb(
@@ -37,7 +38,7 @@ def commandComb() -> Combinator:
             tokenComb(ForthTokenType.LOG_AND),
             tokenComb(ForthTokenType.LOG_OR)
         ),
-        node_name="cmd_calc"
+        node_name=T.cmd_calc
     )
 
     cmd_compare = labelComb(
@@ -46,7 +47,7 @@ def commandComb() -> Combinator:
             tokenComb(ForthTokenType.CMP_LT),
             tokenComb(ForthTokenType.CMP_GT)
         ),
-        node_name="cmd_compare"
+        node_name=T.cmd_compare
     )
 
     cmd_mem = labelComb(
@@ -55,16 +56,16 @@ def commandComb() -> Combinator:
             tokenComb(ForthTokenType.MEM_STORE),
             tokenComb(ForthTokenType.MEM_STORE_INC)
         ),
-        node_name="cmd_mem"
+        node_name=T.cmd_mem
     )
 
     cmd_call = labelComb(
         wordComb,
-        node_name="cmd_call"
+        node_name=T.cmd_call
     )
 
     cmd_push = mapComb(
-        lambda n_name, n_vals: ("cmd_push", [n_vals[0]]),
+        lambda n_name, n_vals: (T.cmd_push, [n_vals[0]]),
         numberComb,
     )
 
@@ -89,7 +90,7 @@ def definitionComb() -> Combinator:
             tokenComb(ForthTokenType.MEM_CELLS),
             tokenComb(ForthTokenType.MEM_ALLOC)
         ),
-        node_name="def_arr"
+        node_name=T.def_arr
     )
 
     # take name child node and extract
@@ -99,7 +100,7 @@ def definitionComb() -> Combinator:
             tokenComb(ForthTokenType.DEF_VAR),
             wordComb
         ),
-        node_name="def_var"
+        node_name=T.def_var
     )
 
     # take name and value child nodes, then merge nodes
@@ -110,7 +111,7 @@ def definitionComb() -> Combinator:
             tokenComb(ForthTokenType.DEF_CONST),
             wordComb
         ),
-        node_name="def_const"
+        node_name=T.def_const
     )
 
     return orComb(
@@ -127,7 +128,7 @@ while_expr = takeComb(
         func_body,
         tokenComb(ForthTokenType.WHILE_END)
     ),
-    node_name="while_expr"
+    node_name=T.while_expr
 )
 
 for_expr = takeComb(
@@ -137,7 +138,7 @@ for_expr = takeComb(
         func_body,
         tokenComb(ForthTokenType.FOR_END)
     ),
-    node_name="for_expr"
+    node_name=T.for_expr
 )
 
 if_expr = takeComb(
@@ -156,7 +157,7 @@ if_expr = takeComb(
             tokenComb(ForthTokenType.COND_THEN)
         )
     ),
-    node_name="if_expr"
+    node_name=T.if_expr
 )
 
 func_body.assign(
@@ -173,7 +174,7 @@ func_body.assign(
 
 function = mapComb(
     # extract name and code from function node
-    lambda n_name, n_vals: ("function", [
+    lambda n_name, n_vals: (T.function, [
         n_vals[1].values[0],  # FUNC_BEGIN -> value
         n_vals[2].values  # func_body -> list
     ]),
@@ -194,5 +195,5 @@ ForthParser = labelComb(
             function
         )
     ),
-    node_name="program"
+    node_name=T.program
 )
