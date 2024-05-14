@@ -16,53 +16,14 @@ numberComb = mapComb(
 
 
 def commandComb() -> Combinator:
-    cmd_io = labelComb(
-        orComb(
-            tokenComb(ForthTokenType.IO_IN),
-            tokenComb(ForthTokenType.IO_OUT_STR),
-            tokenComb(ForthTokenType.IO_OUT_INT),
-            tokenComb(ForthTokenType.IO_OUT_CHAR),
-            tokenComb(ForthTokenType.IO_OUT_CR),
-        ),
-        node_name=T.cmd_io
-    )
+    cmd_io_str = tokenComb(ForthTokenType.IO_OUT_STR,
+                           node_name=T.cmd_io_str)
 
-    cmd_calc = labelComb(
-        orComb(
-            tokenComb(ForthTokenType.MATH_ADD),
-            tokenComb(ForthTokenType.MATH_SUB),
-            tokenComb(ForthTokenType.MATH_DIV),
-            tokenComb(ForthTokenType.MATH_MUL),
-            tokenComb(ForthTokenType.MATH_MOD),
-            tokenComb(ForthTokenType.LOG_INV),
-            tokenComb(ForthTokenType.LOG_AND),
-            tokenComb(ForthTokenType.LOG_OR)
-        ),
-        node_name=T.cmd_calc
-    )
+    cmd_str = tokenComb(ForthTokenType.CONST_STR,
+                        node_name=T.cmd_str)
 
-    cmd_compare = labelComb(
-        orComb(
-            tokenComb(ForthTokenType.CMP_EQ),
-            tokenComb(ForthTokenType.CMP_LT),
-            tokenComb(ForthTokenType.CMP_GT)
-        ),
-        node_name=T.cmd_compare
-    )
-
-    cmd_mem = labelComb(
-        orComb(
-            tokenComb(ForthTokenType.MEM_FETCH),
-            tokenComb(ForthTokenType.MEM_STORE),
-            tokenComb(ForthTokenType.MEM_STORE_INC)
-        ),
-        node_name=T.cmd_mem
-    )
-
-    cmd_call = labelComb(
-        wordComb,
-        node_name=T.cmd_call
-    )
+    cmd_call = labelComb(wordComb,
+                         node_name=T.cmd_call)
 
     cmd_push = mapComb(
         lambda n_name, n_vals: (T.cmd_push, [n_vals[0]]),
@@ -71,10 +32,8 @@ def commandComb() -> Combinator:
 
     return orComb(
         cmd_call,
-        cmd_compare,
-        cmd_calc,
-        cmd_io,
-        cmd_mem,
+        cmd_io_str,
+        cmd_str,
         cmd_push
     )
 
@@ -121,12 +80,24 @@ def definitionComb() -> Combinator:
     )
 
 
-while_expr = takeComb(
+do_while_expr = takeComb(
     [1],
     andComb(
         tokenComb(ForthTokenType.WHILE_BEGIN),
         func_body,
         tokenComb(ForthTokenType.WHILE_END)
+    ),
+    node_name=T.do_while_expr
+)
+
+while_expr = takeComb(
+    [1, 3],
+    andComb(
+        tokenComb(ForthTokenType.WHILE_BEGIN),
+        func_body,
+        tokenComb(ForthTokenType.WHILE_COND),
+        func_body,
+        tokenComb(ForthTokenType.WHILE_REPEAT)
     ),
     node_name=T.while_expr
 )
@@ -167,6 +138,7 @@ func_body.assign(
             commandComb(),
             if_expr,
             for_expr,
+            do_while_expr,
             while_expr
         )
     )

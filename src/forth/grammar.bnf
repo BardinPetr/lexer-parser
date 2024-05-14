@@ -1,11 +1,14 @@
 program ::= program | definition | function | command
 
+
 function ::= FUNC_BEGIN WORD func_body FUNC_END
-func_body ::= func_body | command | if_expr | for_expr | while_expr
+func_body ::= func_body | command | if_expr | for_expr | do_while_expr | while_expr
+
 
 if_expr ::= COND_IF func_body COND_THEN | COND_IF func_body COND_ELSE func_body COND_THEN
 for_expr ::= FOR_BEGIN func_body FOR_END
-while_expr ::= WHILE_BEGIN func_body WHILE_END
+do_while_expr ::= WHILE_BEGIN func_body WHILE_END
+while_expr ::= WHILE_BEGIN func_body WHILE_COND func_body WHILE_REPEAT
 
 
 definition ::= def_const | def_arr | def_var
@@ -14,10 +17,8 @@ def_const ::= NUMBER DEF_CONST WORD
 def_var ::= DEF_VAR WORD
 
 
-command ::= cmd_call | cmd_compare | cmd_calc | cmd_io | cmd_mem | cmd_push
+command ::= cmd_call | cmd_io_str | cmd_push | cmd_str
 cmd_push ::= NUMBER
 cmd_call ::= WORD
-cmd_mem ::= MEM_FETCH | MEM_STORE | MEM_STORE_INC
-cmd_compare ::= CMP_EQ | CMP_LT | CMP_GT
-cmd_calc ::= MATH_ADD | MATH_SUB | MATH_DIV | MATH_MUL | MATH_MOD | LOG_INV | LOG_AND | LOG_OR
-cmd_io ::= IO_IN | IO_OUT_STR | IO_OUT_INT | IO_OUT_CHAR | IO_OUT_CR
+cmd_io_str ::= IO_OUT_STR
+cmd_str ::= CONST_STR

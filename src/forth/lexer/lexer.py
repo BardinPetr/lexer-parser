@@ -24,7 +24,9 @@ class ForthLexer(LexerRe):
             case ForthTokenType.WORD:
                 return Token(token_type, matched)
             case ForthTokenType.IO_OUT_STR:
-                return self.__match_string()
+                return self.__match_string(token_type)
+            case ForthTokenType.CONST_STR:
+                return self.__match_string(token_type)
             case ForthTokenType.PAREN_L:
                 return self.__discard_parenthesis()
             case ForthTokenType.COMMENT:
@@ -32,7 +34,7 @@ class ForthLexer(LexerRe):
 
         return super().handle_token_type(token_type, matched)
 
-    def __match_string(self):
+    def __match_string(self, token_type: TokenType):
         self.skip()
         text = ""
         while not self._stream.eof():
@@ -43,7 +45,7 @@ class ForthLexer(LexerRe):
         else:
             self.error("Not matched string")
 
-        return Token(ForthTokenType.IO_OUT_STR, text)
+        return Token(token_type, text)
 
     def __discard_parenthesis(self):
         self._stream.skip(lambda char: char != ")")
