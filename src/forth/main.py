@@ -1,7 +1,7 @@
-from src.forth.lexer.lexer import ForthLexer
-from src.forth.parse.parser import ForthParser
-from src.lplib.lexer.tstream import CharStream
-from src.lplib.parser.models import PNode
+from forth.lexer.lexer import ForthLexer
+from forth.parse.parser import ForthParser
+from lplib.lexer.tstream import CharStream
+from lplib.parser.models import PNode
 
 
 def parseAST(stream: CharStream) -> PNode:

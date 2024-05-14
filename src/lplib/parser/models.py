@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Any, Callable, Optional
 
-from src.lplib.lexer.tokens import Token
+from lplib.lexer.tokens import Token
 
 Tokens = List[Token]
 

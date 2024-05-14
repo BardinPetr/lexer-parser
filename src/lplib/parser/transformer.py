@@ -1,7 +1,7 @@
 import inspect
 from typing import Any, List, Tuple
 
-from src.lplib.parser.combinator import PNode
+from lplib.parser.combinator import PNode
 
 
 class Transformer:

@@ -1,7 +1,7 @@
 # Generated from BNF
-from src.lplib.parser.utils import CombinatorRef
-from src.lplib.parser.combinator import *
-from src.forth.lexer.tokens import ForthTokenType
+from lplib.parser.utils import CombinatorRef
+from lplib.parser.combinator import *
+from forth.lexer.tokens import ForthTokenType
 
 func_body = CombinatorRef()
 

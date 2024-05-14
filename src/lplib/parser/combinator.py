@@ -1,8 +1,8 @@
 from functools import reduce
 from typing import Union, Tuple
 
-from src.lplib.lexer.tokens import TokenType
-from src.lplib.parser.models import *
+from lplib.lexer.tokens import TokenType
+from lplib.parser.models import *
 
 
 def orComb(*combs: Combinator, create_node=False) -> Combinator:

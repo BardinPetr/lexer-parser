@@ -1,6 +1,6 @@
 from typing import Optional
 
-from src.lplib.parser.models import Combinator, Tokens, ParseResult
+from lplib.parser.models import Combinator, Tokens, ParseResult
 
 
 class CombinatorRef:

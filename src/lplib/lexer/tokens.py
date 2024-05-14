@@ -2,7 +2,7 @@ from enum import Enum
 from re import Pattern
 from typing import Any, Dict
 
-from src.lplib.automata.automata import StringAutomata
+from lplib.automata.automata import StringAutomata
 
 
 class TokenType(Enum):
