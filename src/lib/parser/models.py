@@ -1,14 +1,15 @@
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import List, Any, Callable
+from typing import List, Any, Callable, Optional
 
 from src.lib.lexer.tokens import Token
 
 Tokens = List[Token]
 
 
-class PNodeType(Enum):
-    pass
+class PNodeType:
+    N_DEFAULT = "node_default"
+    N_ARR = "node_array"
+    N_VAL = "node_value"
 
 
 @dataclass
@@ -17,16 +18,28 @@ class PNode:
     values: List[Any]
 
     def __str__(self):
-        return f"{self.type.name}({self.values})"
+        return f"{self.type}{self.values}"
 
     def __repr__(self):
         return self.__str__()
+
+    def print(self, level=1) -> str:
+        child = [
+            i.print(level + 1)
+            if isinstance(i, PNode)
+            else f"{'  ' * level}{i}"
+            for i in self.values
+        ]
+        child = [i for i in child]
+        child = '\n'.join(child)
+        res = f"{'  ' * (level - 1)}<{self.type}>:\n{child}"
+        return res
 
 
 @dataclass
 class ParseResult:
     success: bool
-    result: Any = field(default_factory=list)
+    result: Optional[PNode] = None
     rest: Tokens = field(default_factory=list)
 
     @staticmethod
@@ -34,8 +47,11 @@ class ParseResult:
         return ParseResult(False)
 
     @staticmethod
-    def ok(result: List[Any], rest: Tokens) -> 'ParseResult':
-        return ParseResult(True, result, rest)
+    def ok(children: List[Any], rest: Tokens, node: Optional[PNodeType] = None) -> 'ParseResult':
+        if node is None:
+            node = PNodeType.N_DEFAULT
+        node = PNode(node, children)
+        return ParseResult(True, node, rest)
 
 
 fail = ParseResult.fail

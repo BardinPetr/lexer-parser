@@ -1,9 +1,9 @@
 import re
-from enum import auto
+from pprint import pprint
 
 from src.lib.lexer.lexer import LexerRe
 from src.lib.lexer.tstream import CharStream, FileCharStream
-from src.lib.parser.parser import *
+from src.lib.parser.combinator import *
 from src.lib.parser.transformer import Transformer
 
 
@@ -46,124 +46,117 @@ class BNFLexer(LexerRe):
         return res
 
 
-class BNFNodeType(PNodeType):
-    ROOT = -1
-    REF_PARSER = auto()
-    REF_LEXER = auto()
-    OR_NODE = auto()
-    AND_NODE = auto()
-    DEF_NODE = auto()
-    DEF_OR_NODE = auto()
-
-
 def BNFParser():
-    bnfParserWordComb = nodeComb(
-        BNFNodeType.REF_PARSER,
-        tokenComb(BNFTokenType.PARSER_WORD)
-    )
-    bnfLexerWordComb = nodeComb(
-        BNFNodeType.REF_LEXER,
-        tokenComb(BNFTokenType.LEXER_WORD)
+    bnfParserWordComb = tokenComb(BNFTokenType.PARSER_WORD, node_name="pword")
+    bnfLexerWordComb = tokenComb(BNFTokenType.LEXER_WORD, node_name="lword")
+    bnfReferenceComb = orComb(bnfParserWordComb, bnfLexerWordComb)
+
+    bnfAndComb = countComb(
+        1, bnfReferenceComb,
+        node_name="group_and"
     )
 
-    bnfReferenceComb = orComb(
-        bnfParserWordComb, bnfLexerWordComb
+    bnfOrComb = countComb(
+        1, bnfAndComb,
+        separatorComb=tokenComb(BNFTokenType.OR),
+        node_name="group_or"
     )
 
-    bnfAndComb = nodeComb(
-        BNFNodeType.AND_NODE,
-        countComb(1, bnfReferenceComb)
+    bnfDef = andComb(
+        bnfParserWordComb,
+        tokenComb(BNFTokenType.EQ),
+        bnfOrComb,
+        tokenComb(BNFTokenType.EOL),
+        node_name="node_def"
     )
 
-    bnfOrComb = nodeComb(
-        BNFNodeType.OR_NODE,
-        countCombSep(
-            1,
-            mainComb=bnfAndComb,
-            separatorComb=tokenComb(BNFTokenType.OR),
-        )
-    )
-
-    bnfDef = nodeComb(
-        BNFNodeType.DEF_NODE,
-        andComb(
-            bnfParserWordComb,
-            tokenComb(BNFTokenType.EQ),
-            bnfOrComb,
-            tokenComb(BNFTokenType.EOL)
-        )
-    )
-
-    bnfRoot = nodeComb(
-        BNFNodeType.ROOT,
-        countComb(1, bnfDef)
+    bnfRoot = countComb(
+        1, bnfDef,
+        node_name="root"
     )
     return bnfRoot
 
 
 class BNF2PythonTransformer(Transformer):
 
-    def __init__(self, namespace):
+    def __init__(self, tokenTypeNS: str, combinators_as_refs: List[str]):
         super().__init__()
-        self._ns = namespace
+        self._tt_class = tokenTypeNS[tokenTypeNS.rfind('.') + 1:]
+        self._tt_ns = tokenTypeNS[:tokenTypeNS.rfind('.')]
+        self._use_as_ref = combinators_as_refs
 
-    def REF_PARSER(self, i: Token):
+    def pword(self, i: Token):
         return i.value
 
-    def REF_LEXER(self, i: Token):
-        ref = f"{self._ns}TokenType.{i.value}"
-        return f"tokenComb({ref})"
+    def lword(self, i: Token):
+        return f"tokenComb({self._tt_class}.{i.value})"
 
-    def AND_NODE(self, *andNodes):
+    def group_and(self, *andNodes):
         if len(andNodes) == 1:
             return andNodes[0]
         nodes = ',\n'.join(andNodes)
         return f"andComb(\n{nodes}\n)"
 
-    def before_DEF_NODE(self, node: PNode) -> PNode:
+    def group_or(self, *orNodes):
+        if len(orNodes) == 1:
+            return orNodes[0]
+        nodes = ',\n'.join(orNodes)
+        return f"orComb(\n{nodes}\n, create_node=True\n)"
+
+    def node_def_root_or(self, parent, orNodes):
+        # check if we have recursion in BNF form
+        # (supports only form of "name = <...> | name")
+        if parent not in orNodes:
+            return self.group_or(*orNodes)
+        orNodes.remove(parent)
+        return f"countComb(\n1, \n{self.group_or(*orNodes)}\n)"
+
+    def before_node_def(self, node: PNode) -> PNode:
         # replace root OR_NODE node with DEF_OR_NODE
         # and push name of definition to it
         # to control recursion on level of DEF_OR_NODE
         name, _, body, _ = node.values
         own_name = name.values[0].value
-        body.type = BNFNodeType.DEF_OR_NODE
+        body.type = "node_def_root_or"
         body.values = (own_name, body.values)
         return PNode(node.type, [name, body])
 
-    def OR_NODE(self, *orNodes):
-        if len(orNodes) == 1:
-            return orNodes[0]
-        nodes = ',\n'.join(orNodes)
-        return f"orComb(\n{nodes}\n)"
+    def node_def(self, name, body):
+        labeled_body = f"labelComb(\n{body},\nnode_name=\"{name}\"\n)"
+        return f"{name}.assign({labeled_body})" \
+            if name in self._use_as_ref \
+            else f"{name} = {labeled_body}"
 
-    def DEF_OR_NODE(self, parent, orNodes):
-        # check if we have recursion in BNF form
-        # (supports only form of "name = <...> | name")
-        if parent not in orNodes:
-            return self.OR_NODE(*orNodes)
-        orNodes.remove(parent)
-        return f"countComb(\n1, \n{self.OR_NODE(*orNodes)}\n)"
+    def root(self, *lines):
+        lines = lines[::-1]
 
-    def DEF_NODE(self, name, body):
-        return f"{name} = {body}"
-
-    def ROOT(self, *lines):
-        text = '\n'.join(lines[::-1])
+        body = '\n\n'.join(lines)
+        decls = "\n".join([
+            f"{i} = CombinatorRef()"
+            for i in self._use_as_ref
+        ])
         return f"""
-            from src.lib.parser.parser import *
-            {text}
+            from src.lib.parser.utils import CombinatorRef
+            from src.lib.parser.combinator import *
+            from {self._tt_ns} import {self._tt_class}\n
+            {decls}\n
+            {body}
         """
 
 
 if __name__ == "__main__":
     bnf_path = "/home/petr/Desktop/cpu1_forth/src/forth/grammar.bnf"
     python_path = "../../forth/parser.py"
-    namespace = "Forth"
+    token_namespace = "src.forth.tokens.ForthTokenType"
+    combinators_as_refs = ["func_body"]
 
     text = FileCharStream(bnf_path)
     tokens = BNFLexer()(text)
     tree = BNFParser()(tokens).result
-    tree = BNF2PythonTransformer(namespace)(tree)
+    code = BNF2PythonTransformer(token_namespace, combinators_as_refs)(tree)
+
+    # pprint(tree)
+    # print(tree.print())
 
     with open(python_path, "w") as f:
-        f.write(tree)
+        f.write(code)

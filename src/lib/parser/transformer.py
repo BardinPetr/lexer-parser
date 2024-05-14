@@ -1,34 +1,37 @@
 import inspect
-from typing import Iterable, Any, List, Tuple
+from typing import Any, List, Tuple
 
-from src.lib.parser.parser import PNode
+from src.lib.parser.combinator import PNode
 
 
 class Transformer:
 
     def __init__(self):
-        self._transformers = self._collect_transformers()
+        self.__transformers = self.__collect_transformers()
 
-    def _collect_transformers(self):
+    def __collect_transformers(self):
         return {
             name: val
             for name, val in inspect.getmembers(self)
             if not name.startswith("_")
         }
 
-    def _transform(self, node: PNode, before: bool = False) -> Any:
+    def __transform(self, node: PNode, before: bool = False) -> Any:
+        name = str(node.type)
         if before:
-            tr = self._transformers.get(f"before_{node.type.name}", None)
-            return node if tr is None else tr(node)
+            return tr(node) \
+                if (tr := self.__transformers.get(f"before_{name}", None)) \
+                else node
 
-        tr = self._transformers.get(node.type.name, None)
-        return node if tr is None else tr(*node.values)
+        return tr(*node.values) \
+            if (tr := self.__transformers.get(name, None)) is not None \
+            else node
 
     def __call__(self, tree):
         if isinstance(tree, List | Tuple):
             return [self(i) for i in tree]
         if isinstance(tree, PNode):
-            node = self._transform(tree, before=True)
+            node = self.__transform(tree, before=True)
             node = PNode(node.type, self(node.values))
-            return self._transform(node)
+            return self.__transform(node)
         return tree
