@@ -1,8 +1,7 @@
 import re
-from pprint import pprint
 
 from src.lib.lexer.lexer import LexerRe
-from src.lib.lexer.tstream import CharStream, FileCharStream
+from src.lib.lexer.tstream import CharStream
 from src.lib.parser.combinator import *
 from src.lib.parser.transformer import Transformer
 
@@ -143,3 +142,17 @@ class BNF2PythonTransformer(Transformer):
             {decls}\n
             {body}
         """
+
+
+def compile_bnf2py(bnf_text: str, token_namespace: str, recursive: List[str]) -> str:
+    """
+    Parse BNF file and build parser-combinators corresponding to that grammar.
+    :param bnf_text:  BNF grammar
+    :param token_namespace: full pythonic path to extended TokenType class
+    :param recursive: list of grammar parser names, which are used recursively
+    :return:
+    """
+    text = CharStream(bnf_text)
+    tokens = BNFLexer()(text)
+    tree = BNFParser()(tokens).result
+    return BNF2PythonTransformer(token_namespace, recursive)(tree)

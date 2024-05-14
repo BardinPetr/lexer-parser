@@ -5,6 +5,16 @@ from src.lib.parser.combinator import PNode
 
 
 class Transformer:
+    """
+    Run DFS over tree of PNode.
+    For handling specified node types,
+    extending class should have functions named with PNode type strings.
+    Such functions are run with arguments as spread children values
+    and can return anything, with which node would be replaced.
+    To handle node before DFS enters its children,
+    define functions having name of PNode type string prefixed with "before_",
+    such functions accepts node and should return node with which old node is replaced before dfs recurses.
+    """
 
     def __init__(self):
         self.__transformers = self.__collect_transformers()

@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from src.forth.lexer.lexer import ForthLexer
 from src.forth.parse.parser import ForthParser
 from src.lib.lexer.tstream import CharStream

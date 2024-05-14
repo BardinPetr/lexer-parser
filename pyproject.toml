@@ -3,7 +3,7 @@ name = "cpu1-forth"
 version = "1.0.0"
 description = ""
 authors = ["BardinPetr <bardin.petr@gmail.com>"]
-readme = "README.md"
+readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
