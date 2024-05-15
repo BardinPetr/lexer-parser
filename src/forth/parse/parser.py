@@ -140,15 +140,16 @@ func_body.assign(
             for_expr,
             do_while_expr,
             while_expr
-        )
+        ),
+        node_name=T.func_body
     )
 )
 
 function = mapComb(
     # extract name and code from function node
     lambda n_name, n_vals: (T.function, [
-        n_vals[1].values[0],  # FUNC_BEGIN -> value
-        n_vals[2].values  # func_body -> list
+        n_vals[1].values[0],  # func_name -> value
+        n_vals[2]  # func_body
     ]),
     andComb(
         tokenComb(ForthTokenType.FUNC_BEGIN),

@@ -4,6 +4,7 @@ from lplib.parser.models import PNodeType
 
 
 class ForthPNodeType(PNodeType, StrEnum):
+    func_body = auto()
     cmd_push = auto()
     cmd_io_str = auto()
     cmd_str = auto()

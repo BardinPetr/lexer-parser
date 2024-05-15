@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lplib"
-version = "1.4.2"
+version = "1.4.3"
 description = ""
 authors = ["BardinPetr <bardin.petr@gmail.com>"]
 readme = "readme.md"
