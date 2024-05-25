@@ -46,7 +46,7 @@ def definitionComb() -> Combinator:
             tokenComb(ForthTokenType.DEF_VAR),
             wordComb,
             numberComb,
-            tokenComb(ForthTokenType.MEM_CELLS),
+            tokenComb(ForthTokenType.WORD),
             tokenComb(ForthTokenType.MEM_ALLOC)
         ),
         node_name=T.def_arr

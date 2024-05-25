@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "lplib"
-version = "1.4.3"
+name = "cpu1lplib"
+version = "1.4.4"
 description = ""
 authors = ["BardinPetr <bardin.petr@gmail.com>"]
 readme = "readme.md"

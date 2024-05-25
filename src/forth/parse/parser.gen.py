@@ -96,7 +96,7 @@ def_arr = labelComb(
     andComb(
         def_var,
         tokenComb(ForthTokenType.NUMBER),
-        tokenComb(ForthTokenType.MEM_CELLS),
+        tokenComb(ForthTokenType.WORD),
         tokenComb(ForthTokenType.MEM_ALLOC)
     ),
     node_name="def_arr"

@@ -20,7 +20,6 @@ class ForthTokenType(TokenType):
     WHILE_COND = "while"
 
     MEM_ALLOC = "allot"
-    MEM_CELLS = "cells"
 
     DEF_CONST = "constant"
     DEF_VAR = "variable"
