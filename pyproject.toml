@@ -1,10 +1,13 @@
 [tool.poetry]
-name = "cpu1lplib"
-version = "1.4.4"
+name = "cpulplib"
+version = "1.5.5"
 description = ""
 authors = ["BardinPetr <bardin.petr@gmail.com>"]
 readme = "readme.md"
-packages = [{ include = "forth", from = "src" }, { include = "lplib", from = "src" }]
+packages = [
+    { include = "forth", from = "src" },
+    { include = "lplib", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
