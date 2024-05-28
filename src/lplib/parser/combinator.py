@@ -114,7 +114,7 @@ def mapComb(func: Callable[[str, List], Tuple[str, List]], comb: Combinator) -> 
     return _call
 
 
-def takeComb(select: slice | List[int], comb: Combinator, node_name=None) -> Combinator:
+def takeUnwrapComb(select: slice | List[int], comb: Combinator, node_name=None) -> Combinator:
     """
     Returns unwrapped children of children, with slice over own children
     :param select slice or specified indexes
@@ -130,6 +130,22 @@ def takeComb(select: slice | List[int], comb: Combinator, node_name=None) -> Com
     return mapComb(_apply, comb)
 
 
+def takeComb(select: slice | List[int], comb: Combinator, node_name=None) -> Combinator:
+    """
+    Returns unwrapped children of children, with slice over own children
+    :param select slice or specified indexes
+    """
+
+    def _apply(n_name, n_vals):
+        nodes = n_vals[select] \
+            if isinstance(select, slice) \
+            else [n_vals[idx] for idx in select]
+
+        return (node_name or n_name), nodes
+
+    return mapComb(_apply, comb)
+
+
 def flattenComb(select: Optional[slice | List[int]], comb: Combinator, node_name=None) -> Combinator:
     """
     Join all children results into single result array
@@ -139,4 +155,4 @@ def flattenComb(select: Optional[slice | List[int]], comb: Combinator, node_name
     def _apply(n_name, n_vals):
         return (node_name or n_name), reduce(lambda acc, i: acc + i, n_vals, [])
 
-    return mapComb(_apply, takeComb(select, comb))
+    return mapComb(_apply, takeUnwrapComb(select, comb))

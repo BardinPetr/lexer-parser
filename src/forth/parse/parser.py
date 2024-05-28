@@ -1,8 +1,8 @@
+from forth.lexer.tokens import ForthTokenType
+from forth.parse.nodes import ForthPNodeType as T
 from lplib.parser.combinator import *
 from lplib.parser.models import Combinator
 from lplib.parser.utils import CombinatorRef
-from forth.lexer.tokens import ForthTokenType
-from forth.parse.nodes import ForthPNodeType as T
 
 func_body = CombinatorRef()
 

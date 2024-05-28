@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cpulplib"
-version = "1.5.5"
+version = "1.5.7"
 description = ""
 authors = ["BardinPetr <bardin.petr@gmail.com>"]
 readme = "readme.md"

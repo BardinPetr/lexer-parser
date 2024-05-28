@@ -18,3 +18,4 @@ class ForthPNodeType(PNodeType, StrEnum):
     if_expr = auto()
     program = auto()
     function = auto()
+    f_import = auto()
